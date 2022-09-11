@@ -6,10 +6,10 @@ Matter.use(MatterAttractors);
 
 // Configuration
 const Configs = {
-    numBodies: 30,
+    numBodies: 300,
     width: window.innerWidth,
     height: window.innerHeight,
-    maxInitialDistance: 200,
+    maxInitialDistance: 1000,
 };
 
 function getRandomInRange(min, max) {
@@ -17,7 +17,7 @@ function getRandomInRange(min, max) {
 }
 
 function initialize() {
-    console.log("starting...");
+    console.log("starting simulation...");
     // create an engine
     const engine = Matter.Engine.create();
     engine.gravity.y = 0;
@@ -45,8 +45,9 @@ function initialize() {
     for (let i = 0; i < Configs.numBodies; i++) {
         const x = getRandomInRange(minX, maxX);
         const y = getRandomInRange(minY, maxY);
-        const body = Matter.Bodies.circle(x, y, 5, {
-            mass: 50,
+        const size = getRandomInRange(1, 1);
+        const body = Matter.Bodies.circle(x, y, size, {
+            mass: size,
             frictionAir: 0,
             collisionFilter: {
                 group: 1,
@@ -56,8 +57,8 @@ function initialize() {
             }
         });
         const velocity = Matter.Vector.create(
-            getRandomInRange(-1, 1),
-            getRandomInRange(-1, 1)
+            getRandomInRange(-0.1, 0.1),
+            getRandomInRange(-0.1, 0.1)
         );
         Body.setVelocity(body, velocity);
         bodies.push(body);
