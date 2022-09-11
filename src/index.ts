@@ -1,37 +1,79 @@
 import "styles/main.scss";
-import {Matter} from "matter-js";
+import Matter, { Body } from "matter-js";
+import MatterAttractors from "matter-attractors";
 
-console.log("starting...");
+Matter.use(MatterAttractors);
 
-// module aliases
-var Engine = Matter.Engine,
-    Render = Matter.Render,
-    Runner = Matter.Runner,
-    Bodies = Matter.Bodies,
-    Composite = Matter.Composite;
+// Configuration
+const Configs = {
+    numBodies: 30,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    maxInitialDistance: 200,
+};
 
-// create an engine
-var engine = Engine.create();
+function getRandomInRange(min, max) {
+    return Math.random() * (max - min) + min;
+}
 
-// create a renderer
-var render = Render.create({
-    element: document.body,
-    engine: engine
-});
+function initialize() {
+    console.log("starting...");
+    // create an engine
+    const engine = Matter.Engine.create();
+    engine.gravity.y = 0;
 
-// create two boxes and a ground
-var boxA = Bodies.rectangle(400, 200, 80, 80);
-var boxB = Bodies.rectangle(450, 50, 80, 80);
-var ground = Bodies.rectangle(400, 610, 810, 60, { isStatic: true });
+    // create a renderer
+    const render = Matter.Render.create({
+        element: document.body,
+        engine: engine,
+        options: {
+            width: Configs.width,
+            height: Configs.height,
+            showVelocity: true,
+        },
+    });
 
-// add all of the bodies to the world
-Composite.add(engine.world, [boxA, boxB, ground]);
+    const bodies = [];
 
-// run the renderer
-Render.run(render);
+    const midWidth = Configs.width / 2;
+    const minX = midWidth - Configs.maxInitialDistance / 2;
+    const maxX = midWidth + Configs.maxInitialDistance / 2;
+    const midHeight = Configs.height / 2;
+    const minY = midHeight - Configs.maxInitialDistance / 2;
+    const maxY = midHeight + Configs.maxInitialDistance / 2;
 
-// create runner
-var runner = Runner.create();
+    for (let i = 0; i < Configs.numBodies; i++) {
+        const x = getRandomInRange(minX, maxX);
+        const y = getRandomInRange(minY, maxY);
+        const body = Matter.Bodies.circle(x, y, 5, {
+            mass: 50,
+            frictionAir: 0,
+            collisionFilter: {
+                group: 1,
+            },
+            plugin: {
+                attractors: [MatterAttractors.Attractors.gravity],
+            }
+        });
+        const velocity = Matter.Vector.create(
+            getRandomInRange(-1, 1),
+            getRandomInRange(-1, 1)
+        );
+        Body.setVelocity(body, velocity);
+        bodies.push(body);
+    }
 
-// run the engine
-Runner.run(runner, engine);
+    // add all of the bodies to the world
+    Matter.Composite.add(engine.world, bodies);
+
+    // run the renderer
+    Matter.Render.run(render);
+
+    // create runner
+    const runner = Matter.Runner.create();
+
+    // run the engine
+    Matter.Runner.run(runner, engine);
+}
+
+initialize();
