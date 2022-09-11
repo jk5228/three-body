@@ -6,10 +6,10 @@ Matter.use(MatterAttractors);
 
 // Configuration
 const Configs = {
-    numBodies: 300,
+    numBodies: 10,
     width: window.innerWidth,
     height: window.innerHeight,
-    maxInitialDistance: 1000,
+    maxInitialDistance: 200,
 };
 
 function getRandomInRange(min, max) {
