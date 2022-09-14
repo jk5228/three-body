@@ -10,6 +10,7 @@ const Configs = {
     width: window.innerWidth,
     height: window.innerHeight,
     maxInitialDistance: 200,
+    bodyRadius: 5,
 };
 
 function getRandomInRange(min, max) {
@@ -46,7 +47,7 @@ function initialize() {
     for (let i = 0; i < Configs.numBodies; i++) {
         const x = getRandomInRange(minX, maxX);
         const y = getRandomInRange(minY, maxY);
-        const size = getRandomInRange(5,5);
+        const size = Configs.bodyRadius;
         const body = Matter.Bodies.circle(x, y, size, {
             mass: 40,
             frictionAir: 0,
@@ -73,10 +74,11 @@ function initialize() {
     }
 
     Matter.Events.on(render, 'afterRender', () => {
-        bodies.forEach((body) => {
+        bodies.forEach((body: Matter.Body) => {
+            const position = body.position;
             const trail: Array<{position: Matter.Vector, speed: number}> = trails[body.id];
             trail.unshift({
-                position: Matter.Vector.clone(body.position),
+                position: Matter.Vector.clone(position),
                 speed: body.speed
             });
 
@@ -90,6 +92,20 @@ function initialize() {
                 render.context.fillStyle = 'hsl(' + hue + ', 100%, 55%)';
                 render.context.fillRect(point.x, point.y, 1, 1);
             }
+            
+            render.context.globalAlpha = 1;
+            render.context.fillStyle = 'white';
+            render.context.beginPath();
+                render.context.ellipse(
+                position.x,
+                position.y,
+                Configs.bodyRadius,
+                Configs.bodyRadius,
+                0,
+                2 * Math.PI,
+                0
+            );
+            render.context.fill("nonzero");
 
             render.context.globalAlpha = 1;
 
