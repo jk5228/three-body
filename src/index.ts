@@ -6,7 +6,7 @@ Matter.use(MatterAttractors);
 
 // Configuration
 const Configs = {
-    numBodies: 10,
+    numBodies: 3,
     width: window.innerWidth,
     height: window.innerHeight,
     maxInitialDistance: 200,
@@ -34,6 +34,7 @@ function initialize() {
     });
 
     const bodies = [];
+    const trails = {};
 
     const midWidth = Configs.width / 2;
     const minX = midWidth - Configs.maxInitialDistance / 2;
@@ -45,27 +46,83 @@ function initialize() {
     for (let i = 0; i < Configs.numBodies; i++) {
         const x = getRandomInRange(minX, maxX);
         const y = getRandomInRange(minY, maxY);
-        const size = getRandomInRange(1, 1);
+        const size = getRandomInRange(5,5);
         const body = Matter.Bodies.circle(x, y, size, {
-            mass: size,
+            mass: 40,
             frictionAir: 0,
             collisionFilter: {
                 group: 1,
             },
+            render: {
+                opacity: 1,
+                fillStyle: "#ffffff",
+                strokeStyle: "#ffffff",
+                lineWidth: 10,
+            },
             plugin: {
                 attractors: [MatterAttractors.Attractors.gravity],
-            }
+            },
         });
+        trails[body.id] = [];
         const velocity = Matter.Vector.create(
-            getRandomInRange(-0.1, 0.1),
-            getRandomInRange(-0.1, 0.1)
+            getRandomInRange(-0.3, 0.3),
+            getRandomInRange(-0.3, 0.3)
         );
         Body.setVelocity(body, velocity);
         bodies.push(body);
     }
 
+    Matter.Events.on(render, 'afterRender', () => {
+        bodies.forEach((body) => {
+            const trail: Array<{position: Matter.Vector, speed: number}> = trails[body.id];
+            trail.unshift({
+                position: Matter.Vector.clone(body.position),
+                speed: body.speed
+            });
+
+            render.context.globalAlpha = 0.7;
+
+            for (let item of trail) {
+                var point = item.position,
+                    speed = item.speed;
+
+                var hue = 250 + Math.round(Math.min(1, speed) * 170);
+                render.context.fillStyle = 'hsl(' + hue + ', 100%, 55%)';
+                render.context.fillRect(point.x, point.y, 2, 2);
+            }
+
+            render.context.globalAlpha = 1;
+
+            if (trail.length > 1000) {
+                trail.pop();
+            }
+        });
+    });
+
+    // add repulsive borders
+    const borderOptions = {
+        mass: 1,
+        frictionAir: 0,
+        isStatic: true,
+        collisionFilter: {
+            group: 1,
+        },
+        render: {
+            visible: false,
+        },
+        plugin: {
+            attractors: [MatterAttractors.Attractors.gravity],
+        },
+    };
+    const borders = [
+        Matter.Bodies.rectangle(Configs.width / 2, 0, Configs.width, 5, borderOptions),
+        Matter.Bodies.rectangle(Configs.width, Configs.height / 2, 5, Configs.height, borderOptions),
+        Matter.Bodies.rectangle(Configs.width / 2, Configs.height, Configs.width, 5, borderOptions),
+        Matter.Bodies.rectangle(0, Configs.height / 2, 5, Configs.height, borderOptions),
+    ];
+
     // add all of the bodies to the world
-    Matter.Composite.add(engine.world, bodies);
+    Matter.Composite.add(engine.world, bodies.concat(borders));
 
     // run the renderer
     Matter.Render.run(render);
