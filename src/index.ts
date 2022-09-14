@@ -65,8 +65,8 @@ function initialize() {
         });
         trails[body.id] = [];
         const velocity = Matter.Vector.create(
-            getRandomInRange(-0.3, 0.3),
-            getRandomInRange(-0.3, 0.3)
+            getRandomInRange(-0.5, 0.5),
+            getRandomInRange(-0.5, 0.5)
         );
         Body.setVelocity(body, velocity);
         bodies.push(body);
@@ -88,12 +88,12 @@ function initialize() {
 
                 var hue = 250 + Math.round(Math.min(1, speed) * 170);
                 render.context.fillStyle = 'hsl(' + hue + ', 100%, 55%)';
-                render.context.fillRect(point.x, point.y, 2, 2);
+                render.context.fillRect(point.x, point.y, 1, 1);
             }
 
             render.context.globalAlpha = 1;
 
-            if (trail.length > 1000) {
+            if (trail.length > 2000) {
                 trail.pop();
             }
         });
