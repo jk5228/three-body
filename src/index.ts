@@ -1,3 +1,4 @@
+import "styles/main.scss";
 import Matter, { Body } from "matter-js";
 import MatterAttractors from "matter-attractors";
 
