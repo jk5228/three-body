@@ -1,4 +1,3 @@
-import "styles/main.scss";
 import Matter, { Body } from "matter-js";
 import MatterAttractors from "matter-attractors";
 
@@ -28,11 +27,16 @@ function initialize() {
         element: document.body,
         engine: engine,
         options: {
+            hasBounds: true,
             width: Configs.width,
             height: Configs.height,
-            showVelocity: true,
         },
     });
+
+    const center = Matter.Vector.create(
+        render.options.width / 2,
+        render.options.height / 2
+    );
 
     const bodies = [];
     const trails = {};
@@ -55,10 +59,9 @@ function initialize() {
                 group: 1,
             },
             render: {
-                opacity: 1,
-                fillStyle: "#ffffff",
-                strokeStyle: "#ffffff",
-                lineWidth: 10,
+                visible: false,
+                opacity: 0,
+                lineWidth: 0,
             },
             plugin: {
                 attractors: [MatterAttractors.Attractors.gravity],
@@ -74,6 +77,15 @@ function initialize() {
     }
 
     Matter.Events.on(render, 'afterRender', () => {
+        const avgX = bodies.map((body) => { return body.position.x })
+                .reduce((a, b) => { return a + b }, 0) / bodies.length;
+        const avgY = bodies.map((body) => { return body.position.y })
+            .reduce((a, b) => { return a + b }, 0) / bodies.length;
+        const centerOfMass = Matter.Vector.create(avgX, avgY);
+
+        const translation = Matter.Vector.sub(center, centerOfMass);
+        Matter.Bounds.translate(render.bounds, translation);
+
         bodies.forEach((body: Matter.Body) => {
             const position = body.position;
             const trail: Array<{position: Matter.Vector, speed: number}> = trails[body.id];
@@ -90,15 +102,15 @@ function initialize() {
 
                 var hue = 250 + Math.round(Math.min(1, speed) * 170);
                 render.context.fillStyle = 'hsl(' + hue + ', 100%, 55%)';
-                render.context.fillRect(point.x, point.y, 1, 1);
+                render.context.fillRect(point.x + translation.x, point.y + translation.y, 1, 1);
             }
             
             render.context.globalAlpha = 1;
             render.context.fillStyle = 'white';
             render.context.beginPath();
                 render.context.ellipse(
-                position.x,
-                position.y,
+                position.x + translation.x,
+                position.y + translation.y,
                 Configs.bodyRadius,
                 Configs.bodyRadius,
                 0,
@@ -115,30 +127,8 @@ function initialize() {
         });
     });
 
-    // add repulsive borders
-    const borderOptions = {
-        mass: 1,
-        frictionAir: 0,
-        isStatic: true,
-        collisionFilter: {
-            group: 1,
-        },
-        render: {
-            visible: false,
-        },
-        plugin: {
-            attractors: [MatterAttractors.Attractors.gravity],
-        },
-    };
-    const borders = [
-        Matter.Bodies.rectangle(Configs.width / 2, 0, Configs.width, 5, borderOptions),
-        Matter.Bodies.rectangle(Configs.width, Configs.height / 2, 5, Configs.height, borderOptions),
-        Matter.Bodies.rectangle(Configs.width / 2, Configs.height, Configs.width, 5, borderOptions),
-        Matter.Bodies.rectangle(0, Configs.height / 2, 5, Configs.height, borderOptions),
-    ];
-
     // add all of the bodies to the world
-    Matter.Composite.add(engine.world, bodies.concat(borders));
+    Matter.Composite.add(engine.world, bodies);
 
     // run the renderer
     Matter.Render.run(render);
