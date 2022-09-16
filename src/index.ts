@@ -94,19 +94,20 @@ function initialize() {
                 speed: body.speed
             });
 
-            render.context.globalAlpha = 0.7;
+            render.context.globalAlpha = 1;
 
             for (let item of trail) {
-                var point = item.position,
+                let point = item.position,
                     speed = item.speed;
 
-                var hue = 250 + Math.round(Math.min(1, speed) * 170);
-                render.context.fillStyle = 'hsl(' + hue + ', 100%, 55%)';
+                let hue = 250 + Math.round(Math.min(1, speed) * 170);
+                render.context.fillStyle = 'hsl(' + hue + ', 100%, 50%)';
                 render.context.fillRect(point.x + translation.x, point.y + translation.y, 1, 1);
             }
             
             render.context.globalAlpha = 1;
-            render.context.fillStyle = 'white';
+            const hue = 250 + Math.round(Math.min(1, body.speed) * 170);
+            render.context.fillStyle = 'hsl(' + hue + ', 100%, 50%)';
             render.context.beginPath();
                 render.context.ellipse(
                 position.x + translation.x,
