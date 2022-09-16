@@ -54,6 +54,7 @@ function initialize() {
         const size = Configs.bodyRadius;
         const body = Matter.Bodies.circle(x, y, size, {
             mass: 40,
+            restitution: 0.9,
             frictionAir: 0,
             collisionFilter: {
                 group: 1,
