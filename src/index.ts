@@ -11,6 +11,12 @@ const Configs = {
     height: window.innerHeight,
     maxInitialDistance: 200,
     bodyRadius: 5,
+    bodyMass: 50,
+    maxTrailLength: 2000,
+    maxTotalTrailParticles: 5000,
+    initialSpeed: 0.3,
+    initialSpeedRange: 0.1,
+    initialAngleRange: 0.5 * Math.PI,
 };
 
 function getRandomInRange(min, max) {
@@ -49,13 +55,14 @@ function initialize() {
     const minY = midHeight - Configs.maxInitialDistance / 2;
     const maxY = midHeight + Configs.maxInitialDistance / 2;
 
+    const baseAngle = getRandomInRange(0, 2 * Math.PI);
+
     for (let i = 0; i < Configs.numBodies; i++) {
         const x = getRandomInRange(minX, maxX);
         const y = getRandomInRange(minY, maxY);
-        const size = Configs.bodyRadius;
-        const body = Matter.Bodies.circle(x, y, size, {
-            mass: 40,
-            restitution: 0.9,
+        const body = Matter.Bodies.circle(x, y, Configs.bodyRadius, {
+            mass: Configs.bodyMass,
+            restitution: 0.5,
             frictionAir: 0,
             collisionFilter: {
                 group: 1,
@@ -70,9 +77,17 @@ function initialize() {
             },
         });
         trails[body.id] = [];
-        const velocity = Matter.Vector.create(
-            getRandomInRange(-0.5, 0.5),
-            getRandomInRange(-0.5, 0.5)
+        const angle = baseAngle + getRandomInRange(
+            -Configs.initialAngleRange / 2,
+            Configs.initialAngleRange / 2
+        );
+        const speed = Configs.initialSpeed + getRandomInRange(
+            -Configs.initialSpeedRange,
+            Configs.initialSpeedRange
+        );
+        const velocity = Matter.Vector.rotate(
+            Matter.Vector.mult(Matter.Vector.create(1, 1), speed),
+            angle
         );
         Body.setVelocity(body, velocity);
         bodies.push(body);
@@ -91,23 +106,34 @@ function initialize() {
         bodies.forEach((body: Matter.Body) => {
             const position = body.position;
             const trail: Array<{position: Matter.Vector, speed: number}> = trails[body.id];
-            trail.unshift({
+            trail.push({
                 position: Matter.Vector.clone(position),
                 speed: body.speed
             });
 
             render.context.globalAlpha = 1;
 
-            for (let item of trail) {
+            for (let i = 0; i < trail.length; i++) {
+                let item = trail[i];
                 let point = item.position,
                     speed = item.speed;
 
                 let hue = 250 + Math.round(Math.min(1, speed) * 170);
                 render.context.fillStyle = 'hsl(' + hue + ', 100%, 50%)';
+                const max = trail.length / 4;
+                render.context.globalAlpha = Math.min(i, max) / max;
                 render.context.fillRect(point.x + translation.x, point.y + translation.y, 1, 1);
             }
+
+            let trailLimit = Math.min(
+                Configs.maxTrailLength,
+                Configs.maxTotalTrailParticles / Configs.numBodies
+            );
             
-            render.context.globalAlpha = 1;
+            if (trail.length > trailLimit) {
+                trail.shift();
+            }
+
             const hue = 250 + Math.round(Math.min(1, body.speed) * 170);
             render.context.fillStyle = 'hsl(' + hue + ', 100%, 50%)';
             render.context.beginPath();
@@ -121,12 +147,6 @@ function initialize() {
                 0
             );
             render.context.fill("nonzero");
-
-            render.context.globalAlpha = 1;
-
-            if (trail.length > 2000) {
-                trail.pop();
-            }
         });
     });
 
