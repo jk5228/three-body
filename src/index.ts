@@ -12,11 +12,11 @@ const Configs = {
     maxInitialDistance: 200,
     bodyRadius: 5,
     bodyMass: 50,
-    maxTrailLength: 2000,
+    maxTrailLength: 1500,
     maxTotalTrailParticles: 5000,
     initialSpeed: 0.3,
-    initialSpeedRange: 0.1,
-    initialAngleRange: 0.5 * Math.PI,
+    initialSpeedRange: 0.2,
+    initialAngleRange: 0.75 * Math.PI,
 };
 
 function getRandomInRange(min, max) {
